@@ -170,4 +170,4 @@ if __name__ == "__main__":
     print("\n🎬  Portfolio Server running at http://localhost:5000")
     print(f"📁  Uploads saved to: {os.path.abspath(UPLOAD_FOLDER)}")
     print(f"💾  Data file: {os.path.abspath(DATA_FILE)}\n")
-   app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
