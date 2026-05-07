@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio — Visual Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;
+  --surface:#111;
+  --card:#161616;
+  --line:rgba(255,255,255,0.07);
+  --line2:rgba(255,255,255,0.12);
+  --text:#ede8e0;
+  --muted:#555;
+  --muted2:#777;
+  --gold:#c8a96a;
+  --gold2:#e2c98a;
+  --red:#d45b45;
+  --font-serif:'Cormorant Garamond',serif;
+  --font-sans:'DM Sans',sans-serif;
+  --r:8px;
+  --transition:cubic-bezier(0.25,0.46,0.45,0.94);
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px;opacity:.5}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");opacity:.4;pointer-events:none;z-index:0}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:0.5px solid var(--line2);color:var(--text);font-size:12px;padding:10px 20px;border-radius:30px;letter-spacing:.04em;z-index:999;transition:transform .35s var(--transition),opacity .35s;opacity:0;pointer-events:none;}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.gold{border-color:rgba(200,169,106,.4);color:var(--gold2)}
+#toast.err{border-color:rgba(212,91,69,.4);color:var(--red)}
+
+/* ── LOGIN OVERLAY ── */
+#loginOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:800;align-items:center;justify-content:center;backdrop-filter:blur(10px);}
+#loginOverlay.show{display:flex}
+.login-box{background:var(--surface);border:0.5px solid var(--line2);border-radius:16px;padding:44px 40px 36px;width:360px;text-align:center;position:relative;}
+.login-box::before{content:'';position:absolute;top:-1px;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.login-logo{font-family:var(--font-serif);font-size:13px;font-weight:300;color:var(--muted2);letter-spacing:.18em;text-transform:uppercase;margin-bottom:24px;}
+.login-box h2{font-family:var(--font-serif);font-size:30px;font-weight:300;font-style:italic;color:var(--text);margin-bottom:8px;}
+.login-box p{font-size:12px;color:var(--muted);margin-bottom:30px;letter-spacing:.04em;line-height:1.6;}
+.login-box input{width:100%;padding:12px 16px;background:#0d0d0d;border:0.5px solid var(--line2);border-radius:var(--r);color:var(--text);font-family:var(--font-sans);font-size:13px;margin-bottom:10px;outline:none;transition:border-color .15s;letter-spacing:.04em;}
+.login-box input:focus{border-color:rgba(200,169,106,.5);}
+.login-box input::placeholder{color:var(--muted)}
+.login-submit{width:100%;padding:12px;background:var(--gold);border:none;border-radius:var(--r);font-family:var(--font-sans);font-size:12px;font-weight:500;color:#080808;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:background .15s;margin-top:6px;}
+.login-submit:hover{background:var(--gold2)}
+.login-err{font-size:11px;color:var(--red);margin-top:12px;display:none;letter-spacing:.04em}
+.login-close{font-size:11px;color:var(--muted);margin-top:18px;cursor:pointer;letter-spacing:.06em;text-decoration:underline;text-underline-offset:3px;display:block}
+.login-close:hover{color:var(--muted2)}
+
+/* ── LIGHTBOX ── */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:700;align-items:center;justify-content:center;padding:40px;}
+#lightbox.show{display:flex}
+.lb-wrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;max-width:92vw;}
+#lbMedia img,#lbMedia video{max-width:90vw;max-height:82vh;border-radius:6px;object-fit:contain;display:block;}
+.lb-bar{display:flex;align-items:center;justify-content:space-between;width:100%;gap:16px;}
+.lb-name{font-family:var(--font-serif);font-size:18px;font-style:italic;color:var(--muted2);font-weight:300;}
+.lb-close{background:none;border:0.5px solid var(--line2);color:var(--muted2);font-size:18px;cursor:pointer;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;font-family:var(--font-sans);line-height:1;}
+.lb-close:hover{border-color:var(--line2);color:var(--text)}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:26px 52px;border-bottom:0.5px solid var(--line);position:sticky;top:0;background:rgba(8,8,8,.92);backdrop-filter:blur(16px);z-index:100;}
+.nav-brand{display:flex;flex-direction:column;gap:3px;}
+.brand-name{font-family:var(--font-serif);font-size:22px;font-weight:300;color:var(--text);letter-spacing:.04em;}
+.brand-sub{font-size:10px;font-weight:300;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;}
+.nav-actions{display:flex;align-items:center;gap:10px;}
+.stat-chip{background:rgba(200,169,106,.08);border:0.5px solid rgba(200,169,106,.2);color:var(--gold);font-size:11px;padding:5px 14px;border-radius:20px;letter-spacing:.04em;transition:all .15s;}
+.owner-btn{padding:7px 16px;border:0.5px solid var(--line2);border-radius:20px;background:transparent;font-family:var(--font-sans);font-size:11px;color:var(--muted2);cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .15s;}
+.owner-btn:hover{color:var(--text);border-color:var(--line2)}
+.owner-btn.on{background:rgba(200,169,106,.1);border-color:rgba(200,169,106,.35);color:var(--gold2)}
+
+/* ── ADMIN BAR ── */
+#adminBar{display:none;padding:14px 52px;background:rgba(200,169,106,.04);border-bottom:0.5px solid rgba(200,169,106,.12);align-items:center;gap:14px;flex-wrap:wrap;}
+#adminBar.show{display:flex}
+.upload-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 20px;background:var(--gold);border:none;border-radius:var(--r);font-family:var(--font-sans);font-size:12px;font-weight:500;color:#080808;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;transition:background .15s;}
+.upload-btn:hover{background:var(--gold2)}
+.upload-btn svg,.upload-btn span{pointer-events:none}
+.upload-btn svg{width:14px;height:14px;stroke:#080808;fill:none;stroke-width:2.2;}
+.admin-hint{font-size:11px;color:var(--muted);letter-spacing:.04em;}
+.logout-btn{margin-left:auto;padding:7px 14px;border:0.5px solid var(--line);border-radius:var(--r);background:transparent;font-family:var(--font-sans);font-size:11px;color:var(--muted);cursor:pointer;letter-spacing:.04em;transition:all .15s;}
+.logout-btn:hover{border-color:rgba(212,91,69,.4);color:var(--red)}
+
+/* ── UPLOAD PROGRESS ── */
+#progressBar{display:none;height:2px;background:var(--line);position:relative;overflow:hidden;}
+#progressBar.show{display:block}
+#progressFill{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .3s ease;border-radius:1px;}
+
+/* ── HERO ── */
+.hero{padding:72px 52px 48px;border-bottom:0.5px solid var(--line);position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(200,169,106,.25),transparent);}
+.hero-eyebrow{font-size:11px;font-weight:300;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.hero-eyebrow::before{content:'';display:inline-block;width:28px;height:0.5px;background:var(--gold)}
+.hero h1{font-family:var(--font-serif);font-size:clamp(44px,6vw,76px);font-weight:300;color:var(--text);line-height:1.04;letter-spacing:-.01em;}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero-desc{font-size:14px;font-weight:300;color:var(--muted2);margin-top:20px;max-width:480px;line-height:1.7;letter-spacing:.02em;}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;align-items:center;gap:8px;padding:18px 52px;border-bottom:0.5px solid var(--line);}
+.filter-label{font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-right:6px;}
+.ftab{padding:6px 16px;border:0.5px solid var(--line);border-radius:20px;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:400;color:var(--muted2);cursor:pointer;transition:all .2s;letter-spacing:.02em;}
+.ftab:hover{color:var(--text);border-color:var(--line2)}
+.ftab.on{background:rgba(200,169,106,.12);border-color:rgba(200,169,106,.35);color:var(--gold2)}
+
+/* ── GRID ── */
+.grid-section{padding:36px 52px 80px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:22px;}
+
+/* ── CARD ── */
+.card{background:var(--card);border:0.5px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:border-color .3s var(--transition),transform .3s var(--transition),box-shadow .3s var(--transition);}
+.card:hover{border-color:rgba(200,169,106,.3);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.thumb{position:relative;aspect-ratio:16/10;overflow:hidden;background:#0c0c0c;}
+.thumb img,.thumb video{width:100%;height:100%;object-fit:cover;transition:transform .6s var(--transition);}
+.card:hover .thumb img,.card:hover .thumb video{transform:scale(1.06)}
+.thumb-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:transparent;transition:background .3s;}
+.card:hover .thumb-overlay{background:rgba(0,0,0,.2)}
+.play-ring{width:50px;height:50px;border-radius:50%;border:1.5px solid rgba(200,169,106,.7);display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.7);transition:opacity .3s,transform .3s;}
+.card:hover .play-ring{opacity:1;transform:scale(1)}
+.play-ring svg{width:18px;height:18px;fill:var(--gold2);margin-left:3px;}
+.badge{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,.7);border:0.5px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:9px;font-weight:500;padding:3px 10px;border-radius:20px;letter-spacing:.1em;text-transform:uppercase;}
+.del-btn{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:var(--red);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.7);transition:opacity .2s,transform .2s;z-index:2;}
+.card:hover .del-btn.visible{opacity:1;transform:scale(1)}
+.del-btn svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2.5}
+.card-info{padding:16px 16px 14px;display:flex;align-items:flex-start;justify-content:space-between;border-top:0.5px solid var(--line);}
+.info-left{flex:1;min-width:0;}
+.card-name{font-family:var(--font-serif);font-size:16px;font-weight:300;font-style:italic;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-date{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.06em;text-transform:uppercase;}
+.card-size{font-size:10px;color:var(--muted);opacity:.6;margin-top:2px;letter-spacing:.04em;}
+.edit-name{background:none;border:none;border-bottom:0.5px solid var(--line2);color:var(--text);font-family:var(--font-serif);font-size:16px;font-style:italic;font-weight:300;width:100%;outline:none;padding-bottom:2px;}
+.edit-name:focus{border-color:rgba(200,169,106,.5)}
+
+/* ── EMPTY ── */
+.empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 32px;gap:20px;text-align:center;}
+.empty-ring{width:70px;height:70px;border-radius:50%;border:0.5px solid var(--line2);display:flex;align-items:center;justify-content:center;}
+.empty-ring svg{width:26px;height:26px;stroke:var(--muted);fill:none;stroke-width:1;}
+.empty h3{font-family:var(--font-serif);font-size:22px;font-weight:300;font-style:italic;color:var(--muted2)}
+.empty p{font-size:12px;color:var(--muted);letter-spacing:.04em;line-height:1.7;max-width:300px}
+
+/* ── DROP ZONE ── */
+body.dragging::after{content:'Drop files to upload';position:fixed;inset:0;background:rgba(200,169,106,.06);border:2px dashed rgba(200,169,106,.4);border-radius:0;display:flex;align-items:center;justify-content:center;z-index:600;font-family:var(--font-serif);font-size:36px;font-style:italic;color:var(--gold2);pointer-events:none;}
+
+/* ── FOOTER ── */
+footer{border-top:0.5px solid var(--line);padding:24px 52px;display:flex;align-items:center;justify-content:space-between;}
+.footer-l{font-family:var(--font-serif);font-size:13px;font-style:italic;color:var(--muted);font-weight:300;}
+.footer-r{font-size:11px;color:var(--muted);letter-spacing:.06em;display:flex;align-items:center;gap:8px;}
+.dot{width:3px;height:3px;border-radius:50%;background:var(--gold);display:inline-block}
+
+/* ── LOADING SPINNER ── */
+.spinner{display:inline-block;width:14px;height:14px;border:1.5px solid var(--line2);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+input[type=file]{display:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  nav,footer{padding-left:20px;padding-right:20px}
+  .hero,.filter-bar,.grid-section,#adminBar{padding-left:20px;padding-right:20px}
+  .hero h1{font-size:38px}
+  .grid{grid-template-columns:1fr 1fr;gap:12px}
+}
+@media(max-width:420px){
+  .grid{grid-template-columns:1fr;gap:14px}
+}
+</style>
+</head>
+<body>
+
+<input type="file" id="fi" multiple accept="image/*,video/*">
+<div id="toast"></div>
+
+<!-- LOGIN -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">Portfolio Studio</div>
+    <h2>Owner Access</h2>
+    <p>Sign in to upload and manage<br>your media collection</p>
+    <input type="password" id="pwInput" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-submit" onclick="doLogin()">Sign in</button>
+    <div class="login-err" id="loginErr">Incorrect password — try again</div>
+    <span class="login-close" onclick="closeLogin()">Cancel</span>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLb(event)">
+  <div class="lb-wrap">
+    <div id="lbMedia"></div>
+    <div class="lb-bar">
+      <span class="lb-name" id="lbName"></span>
+      <button class="lb-close" onclick="closeLb()">✕</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="brand-name">Portfolio</div>
+    <div class="brand-sub">Visual Collection</div>
+  </div>
+  <div class="nav-actions">
+    <span class="stat-chip" id="statChip">Loading…</span>
+    <button class="owner-btn" id="ownerBtn" onclick="toggleOwner()">Owner</button>
+  </div>
+</nav>
+
+<!-- ADMIN BAR -->
+<div id="adminBar">
+  <button class="upload-btn" onclick="document.getElementById('fi').click()">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+    <span>Upload media</span>
+  </button>
+  <span class="admin-hint">Or drag &amp; drop files anywhere on the page</span>
+  <button class="logout-btn" onclick="logout()">Lock &amp; exit</button>
+</div>
+
+<!-- UPLOAD PROGRESS -->
+<div id="progressBar"><div id="progressFill"></div></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Creative Portfolio</div>
+  <h1>My <em>Visual</em><br>Collection</h1>
+  <p class="hero-desc">A curated selection of photography and video work. Click any piece to view it full screen.</p>
+</section>
+
+<!-- FILTERS -->
+<div class="filter-bar">
+  <span class="filter-label">View</span>
+  <button class="ftab on" onclick="setFilter('all',this)">All</button>
+  <button class="ftab" onclick="setFilter('image',this)">Photos</button>
+  <button class="ftab" onclick="setFilter('video',this)">Videos</button>
+</div>
+
+<!-- GRID -->
+<div class="grid-section">
+  <div class="grid" id="grid">
+    <div class="empty">
+      <div class="empty-ring"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg></div>
+      <h3>Loading…</h3>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-l">Portfolio Studio</span>
+  <div class="footer-r">
+    <span class="dot"></span>
+    <span>All rights reserved &copy; 2025</span>
+  </div>
+</footer>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────
+let items = [], filter = 'all', isOwner = false, ownerPw = '';
+
+// ── TOAST ──────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 2800);
+}
+
+// ── API HELPERS ────────────────────────────────────────────────
+async function api(path, opts={}) {
+  const res = await fetch(path, {
+    headers: { 'X-Owner-Password': ownerPw, 'Content-Type': 'application/json', ...(opts.headers||{}) },
+    ...opts
+  });
+  return res.json();
+}
+
+// ── LOAD ITEMS ─────────────────────────────────────────────────
+async function loadItems() {
+  try {
+    items = await api('/api/items');
+    const stats = await api('/api/stats');
+    document.getElementById('statChip').textContent =
+      `${stats.total} items · ${stats.size_mb} MB`;
+    render();
+  } catch(e) {
+    toast('Could not connect to server', 'err');
+  }
+}
+
+// ── FILTER ─────────────────────────────────────────────────────
+function setFilter(v, btn) {
+  filter = v;
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  render();
+}
+
+// ── RENDER ─────────────────────────────────────────────────────
+function render() {
+  const vis = filter === 'all' ? items : items.filter(i => i.type === filter);
+  const grid = document.getElementById('grid');
+
+  if (!vis.length) {
+    grid.innerHTML = `<div class="empty">
+      <div class="empty-ring"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+      <h3>${filter === 'all' ? 'Nothing here yet' : 'No ' + filter + 's found'}</h3>
+      <p>${isOwner ? 'Click "Upload media" above or drag files anywhere.' : 'Come back soon for new work.'}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = vis.map(item => `
+    <div class="card" onclick="handleCard(event,'${item.id}')">
+      <div class="thumb">
+        ${item.type === 'video'
+          ? `<video src="${item.url}" muted loop onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>`
+          : `<img src="${item.url}" alt="${item.name}" loading="lazy">`}
+        <div class="thumb-overlay">
+          ${item.type === 'video' ? `<div class="play-ring"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></div>` : ''}
+        </div>
+        <span class="badge">${item.type}</span>
+        ${isOwner ? `<button class="del-btn visible" onclick="event.stopPropagation();delItem('${item.id}')" title="Delete">
+          <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>` : ''}
+      </div>
+      <div class="card-info">
+        <div class="info-left">
+          ${isOwner
+            ? `<input class="edit-name" value="${item.name}" onclick="event.stopPropagation()" onblur="saveName('${item.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur()">`
+            : `<div class="card-name">${item.name}</div>`}
+          <div class="card-date">${item.date}</div>
+          ${item.size_kb ? `<div class="card-size">${item.size_kb > 1024 ? (item.size_kb/1024).toFixed(1)+' MB' : item.size_kb+' KB'}</div>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── CARD CLICK ─────────────────────────────────────────────────
+function handleCard(e, id) {
+  if (e.target.tagName === 'INPUT') return;
+  const item = items.find(i => i.id === id);
+  if (item) openLb(item);
+}
+
+// ── LIGHTBOX ───────────────────────────────────────────────────
+function openLb(item) {
+  document.getElementById('lbMedia').innerHTML = item.type === 'video'
+    ? `<video src="${item.url}" controls autoplay></video>`
+    : `<img src="${item.url}" alt="${item.name}">`;
+  document.getElementById('lbName').textContent = item.name;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLb(e) {
+  if (e && document.querySelector('.lb-wrap').contains(e.target)) return;
+  document.getElementById('lightbox').classList.remove('show');
+  document.querySelector('#lbMedia video') && document.querySelector('#lbMedia video').pause();
+}
+
+// ── UPLOAD ─────────────────────────────────────────────────────
+document.getElementById('fi').addEventListener('change', async e => {
+  await uploadFiles([...e.target.files]);
+  e.target.value = '';
+});
+
+async function uploadFiles(files) {
+  if (!isOwner) return;
+  const valid = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+  if (!valid.length) { toast('No supported files found', 'err'); return; }
+
+  const pb = document.getElementById('progressBar');
+  const pf = document.getElementById('progressFill');
+  pb.classList.add('show');
+  pf.style.width = '10%';
+
+  const form = new FormData();
+  valid.forEach(f => form.append('files', f));
+
+  try {
+    pf.style.width = '50%';
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'X-Owner-Password': ownerPw },
+      body: form
+    });
+    pf.style.width = '90%';
+    const data = await res.json();
+    if (data.added) {
+      items.unshift(...data.added);
+      render();
+      await loadItems(); // refresh stats
+      toast(`✓ ${data.added.length} file${data.added.length > 1 ? 's' : ''} uploaded`, 'gold');
+    }
+  } catch(e) {
+    toast('Upload failed — is the server running?', 'err');
+  }
+  pf.style.width = '100%';
+  setTimeout(() => { pb.classList.remove('show'); pf.style.width = '0%'; }, 600);
+}
+
+// ── DELETE ─────────────────────────────────────────────────────
+async function delItem(id) {
+  if (!isOwner) return;
+  if (!confirm('Delete this item permanently?')) return;
+  try {
+    await fetch(`/api/items/${id}`, {
+      method: 'DELETE',
+      headers: { 'X-Owner-Password': ownerPw }
+    });
+    items = items.filter(i => i.id !== id);
+    render();
+    loadItems();
+    toast('Deleted', '');
+  } catch(e) {
+    toast('Delete failed', 'err');
+  }
+}
+
+// ── RENAME ─────────────────────────────────────────────────────
+async function saveName(id, name) {
+  if (!isOwner || !name.trim()) return;
+  try {
+    const updated = await api(`/api/items/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name: name.trim() }),
+      headers: { 'X-Owner-Password': ownerPw }
+    });
+    const item = items.find(i => i.id === id);
+    if (item) item.name = updated.name;
+    toast('Name saved', 'gold');
+  } catch(e) {}
+}
+
+// ── AUTH ───────────────────────────────────────────────────────
+function toggleOwner() {
+  if (isOwner) { logout(); return; }
+  document.getElementById('loginOverlay').classList.add('show');
+  document.getElementById('pwInput').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+  setTimeout(() => document.getElementById('pwInput').focus(), 100);
+}
+async function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  try {
+    const res = await api('/api/auth', { method: 'POST', body: JSON.stringify({ password: pw }) });
+    if (res.ok) {
+      ownerPw = pw;
+      isOwner = true;
+      document.getElementById('loginOverlay').classList.remove('show');
+      document.getElementById('adminBar').classList.add('show');
+      document.getElementById('ownerBtn').classList.add('on');
+      document.getElementById('ownerBtn').textContent = 'Owner ✓';
+      render();
+      toast('Welcome back', 'gold');
+    } else {
+      document.getElementById('loginErr').style.display = 'block';
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwInput').focus();
+    }
+  } catch(e) {
+    toast('Server not reachable', 'err');
+  }
+}
+function closeLogin() {
+  document.getElementById('loginOverlay').classList.remove('show');
+}
+function logout() {
+  isOwner = false; ownerPw = '';
+  document.getElementById('adminBar').classList.remove('show');
+  document.getElementById('ownerBtn').classList.remove('on');
+  document.getElementById('ownerBtn').textContent = 'Owner';
+  render();
+  toast('Logged out');
+}
+
+// ── DRAG & DROP ────────────────────────────────────────────────
+document.addEventListener('dragover', e => { e.preventDefault(); if (isOwner) document.body.classList.add('dragging'); });
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('dragging'); });
+document.addEventListener('drop', async e => {
+  e.preventDefault();
+  document.body.classList.remove('dragging');
+  if (!isOwner) { toast('Sign in as Owner to upload', ''); return; }
+  await uploadFiles([...e.dataTransfer.files]);
+});
+
+// ── KEYBOARD ──────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeLb(); closeLogin(); }
+});
+
+// ── INIT ──────────────────────────────────────────────────────
+loadItems();
+</script>
+</body>
+</html>
