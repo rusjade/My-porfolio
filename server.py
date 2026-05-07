@@ -14,7 +14,7 @@ from flask import Flask, request, jsonify, send_file, send_from_directory, abort
 app = Flask(__name__, static_folder='static')
 
 # ── CONFIG ──────────────────────────────────────────────────────────────
-OWNER_PASSWORD  = "mypassword123"   # ← CHANGE THIS before deploying!
+OWNER_PASSWORD  = "Rusjade.123"   # ← CHANGE THIS before deploying!
 UPLOAD_FOLDER   = "uploads"
 DATA_FILE       = "portfolio_data.json"
 MAX_FILE_MB     = 200               # max upload size in MB
